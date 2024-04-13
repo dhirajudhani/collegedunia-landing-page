@@ -1,4 +1,4 @@
-const  data=[
+[
     {
       "collegeName": "Indian Institute of Technology Delhi (IIT Delhi)",
       "courseFees": "10,00,000",
@@ -360,4 +360,3 @@ const  data=[
           "image":"https://images.collegedunia.com/public/college_data/images/logos/1578548425D0GSnuY5SXyhNfM5orI1RQmini1.jpg?h=80&w=80&mode=stretch"
         }
 ]
-export default data;

@@ -1,18 +1,62 @@
 import React, { useEffect, useState } from "react";
-import data from "./records.js";
+import data from "./records.json";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 const App = () => {
   const [searchedCollege, setSearchCollege] = useState([]);
-
   const [searchText, setSearchText] = useState("");
-  // useEffect(() => {
-  //   setSearchCollege(data)
-  
-  // }, [])
+  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Adjust as needed
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const filteredData = data.filter((res) =>
+        res.collegeName.toLowerCase().includes(searchText.toLowerCase())
+      );
+      setSearchCollege(filteredData.slice(0, itemsPerPage)); // Initial data
+    };
+
+    fetchData();
+  }, [searchText]);
+
+  const fetchMoreData = async () => {
+    const startIndex = currentPage * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+
+    if (startIndex >= data.length) {
+      setHasMore(false);
+      return;
+    }
+
+    const filteredData = data.filter((res) =>
+      res.collegeName.toLowerCase().includes(searchText.toLowerCase())
+    );
+    const newData = filteredData.slice(startIndex, endIndex);
+
+    setSearchCollege((prevCollege) => [...prevCollege, ...newData]);
+    setCurrentPage(currentPage + 1);
+  };
   
   return (
     <>
-    <divc className="items-center"><input type="text" name="" id="" placeholder="Enter college name" className="p-2 m-2 rounded-3xl bg-black w-100 items-center "/></divc>
+    <div className="items-center"><input type="text" name="" id="" placeholder="Enter college name" className="p-2 m-2 rounded-3xl bg-white w-100 items-center " onChange={(e)=>{setSearchText(e.target.value)}}/> 
+    <button onClick={()=>{
+      // console.log(searchText);
+      const fillteredCollege = [...data].filter((res) => {
+        return res.collegeName
+          .toLowerCase()
+          .includes(searchText.toLocaleLowerCase());
+      });
+      setSearchCollege(fillteredCollege);
+    }}
+    >Search</button></div>
+    <InfiniteScroll
+                dataLength={searchedCollege.length}
+                next={fetchMoreData}
+                hasMore={hasMore}
+                loader={<h4>Loading...</h4>}
+              >
     <div className="p-5 h-screen bg-gray-100">
       <div className="overflow-auto rounded-lg shadow hidden md:block">
         <table className="w-full">
@@ -39,7 +83,8 @@ const App = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-          {data.map((item,index)=>{
+          
+          {searchedCollege.map((item,index)=>{
                 return ( <tr className="bg-white" key={index}>
               
                 <><td className="p-3 text-sm text-gray-700 whitespace-nowrap w-1/12">
@@ -111,53 +156,14 @@ const App = () => {
               
             </tr>)
               })}
-            <tr className="bg-gray-50">
-              <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                <a href="#" className="font-bold text-blue-500 hover:underline">
-                  10002
-                </a>
-              </td>
-              <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                Kring New Fit office chair, mesh + PU, black
-              </td>
-              <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                <span className="p-1.5 text-xs font-medium uppercase tracking-wider text-yellow-800 bg-yellow-200 rounded-lg bg-opacity-50">
-                  Shipped
-                </span>
-              </td>
-              <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                16/10/2021
-              </td>
-              <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                $200.00
-              </td>
-            </tr>
-            <tr className="bg-white">
-              <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                <a href="#" className="font-bold text-blue-500 hover:underline">
-                  10002
-                </a>
-              </td>
-              <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                Kring New Fit office chair, mesh + PU, black
-              </td>
-              <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                <span className="p-1.5 text-xs font-medium uppercase tracking-wider text-gray-800 bg-gray-200 rounded-lg bg-opacity-50">
-                  Cancelled
-                </span>
-              </td>
-              <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                16/10/2021
-              </td>
-              <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                $200.00
-              </td>
-            </tr>
+            
           </tbody>
         </table>
       </div>
+      </div>
+      </InfiniteScroll>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
         <div className="bg-white space-y-3 p-4 rounded-lg shadow">
           <div className="flex items-center space-x-2 text-sm">
             <div>
@@ -215,8 +221,8 @@ const App = () => {
           </div>
           <div className="text-sm font-medium text-black">$200.00</div>
         </div>
-      </div>
-    </div>
+      </div> */}
+  
     </>
   );
 };
