@@ -7,6 +7,8 @@ const App = () => {
   const [searchText, setSearchText] = useState("");
   const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState("fees"); // Default sorting by fees
+  const [sortOrder, setSortOrder] = useState("asc"); // Default sorting order
   const itemsPerPage = 10; // Adjust as needed
 
   useEffect(() => {
@@ -20,7 +22,41 @@ const App = () => {
     fetchData();
   }, [searchText]);
 
-  const fetchMoreData = async () => {
+  const sortData = (dataToSort) => {
+    return dataToSort.sort((a, b) => {
+      let comparison = 0;
+      if (sortOrder === "asc") {
+        // Handle string sorting (adjust for other property types)
+        if (sortBy === "collegeName") {
+          comparison = a[sortBy].toLowerCase().localeCompare(b[sortBy].toLowerCase());
+        } else {
+          comparison = a[sortBy] - b[sortBy];
+        }
+      } else {
+        // Reverse logic for descending order
+        if (sortBy === "collegeName") {
+          comparison = b[sortBy].toLowerCase().localeCompare(a[sortBy].toLowerCase());
+        } else {
+          comparison = b[sortBy] - a[sortBy];
+        }
+      }
+      return comparison;
+    });
+  };
+
+  const handleSort = (selectedSortBy) => {
+    if (selectedSortBy === sortBy) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(selectedSortBy);
+      setSortOrder("asc");
+    }
+
+    // Re-sort the entire dataset after changing sort criteria
+    setSearchCollege(sortData(searchedCollege.slice())); // Create a copy to avoid mutation
+  };
+
+  const fetchMoreData = () => {
     const startIndex = currentPage * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
 
@@ -37,54 +73,84 @@ const App = () => {
     setSearchCollege((prevCollege) => [...prevCollege, ...newData]);
     setCurrentPage(currentPage + 1);
   };
-  
+
   return (
     <>
-    <div className="items-center"><input type="text" name="" id="" placeholder="Enter college name" className="p-2 m-2 rounded-3xl bg-white w-100 items-center " onChange={(e)=>{setSearchText(e.target.value)}}/> 
-    <button onClick={()=>{
-      // console.log(searchText);
-      const fillteredCollege = [...data].filter((res) => {
-        return res.collegeName
-          .toLowerCase()
-          .includes(searchText.toLocaleLowerCase());
-      });
-      setSearchCollege(fillteredCollege);
-    }}
-    >Search</button></div>
-    <InfiniteScroll
-                dataLength={searchedCollege.length}
-                next={fetchMoreData}
-                hasMore={hasMore}
-                loader={<h4>Loading...</h4>}
-              >
-    <div className="p-5 h-screen bg-gray-100">
-      <div className="overflow-auto rounded-lg shadow hidden md:block">
-        <table className="w-full">
-          <thead className="bg-gray-400 border-b-2 border-gray-200">
-            <tr>
-              <th className="w-15 p-3 text-sm font-semibold tracking-wide text-left">
-                CD Rank
-              </th>
-              <th className="p-3 text-sm font-semibold tracking-wide text-left">
-                Colleges
-              </th>
-              <th className="w-20 p-3 text-sm font-semibold tracking-wide text-left">
-                Course Fees
-              </th>
-              <th className="w-24 p-3 text-sm font-semibold tracking-wide text-left">
-                Placement
-              </th>
-              <th className="w-32 p-3 text-sm font-semibold tracking-wide text-left">
-                User Review
-              </th>
-              <th className="w-32 p-3 text-sm font-semibold tracking-wide text-left">
-                Ranking
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-          
-          {searchedCollege.map((item,index)=>{
+      <div className="flex justify-around">
+        <div className="items-center">
+          <input
+            type="text"
+            placeholder="Enter college name"
+            className="p-2 m-2 rounded-3xl bg-white w-100 items-center"
+            onChange={(e) => {
+              setSearchText(e.target.value);
+            }}
+          />
+          <button
+            className="bg-blue-500 rounded-lg p-2"
+            onClick={() => {
+              const filteredCollege = data.filter((res) => {
+                return res.collegeName
+                  .toLowerCase()
+                  .includes(searchText.toLowerCase());
+              });
+              setSearchCollege(filteredCollege);
+            }}
+          >
+            Search
+          </button>
+        </div>
+        <div className="sort-selection m-4">
+          <label htmlFor="sort">Sort By:</label>
+          <select
+            name="sort"
+            id="sort"
+            value={sortBy}
+            onChange={(e) => handleSort(e.target.value)}
+          >
+            <option value="fees">Fees</option>
+            <option value="ranking">CD Rank</option>
+            <option value="review">User Review</option>
+            <option value="collegeName">College Name</option>
+          </select>
+          <button onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}>
+            {sortOrder === "asc" ? "▲" : "▼"}
+          </button>
+        </div>
+      </div>
+      <InfiniteScroll
+        dataLength={searchedCollege.length}
+        next={fetchMoreData}
+        hasMore={hasMore}
+        loader={<h4>Loading...</h4>}
+      >
+        <div className="p-5 h-screen bg-gray-100">
+          <div className="overflow-auto rounded-lg shadow hidden md:block">
+            <table className="w-full">
+              <thead className="bg-gray-400 border-b-2 border-gray-200">
+                <tr>
+                  <th className="w-15 p-3 text-sm font-semibold tracking-wide text-left">
+                    CD Rank
+                  </th>
+                  <th className="p-3 text-sm font-semibold tracking-wide text-left">
+                    Colleges
+                  </th>
+                  <th className="w-20 p-3 text-sm font-semibold tracking-wide text-left">
+                    Course Fees
+                  </th>
+                  <th className="w-24 p-3 text-sm font-semibold tracking-wide text-left">
+                    Placement
+                  </th>
+                  <th className="w-32 p-3 text-sm font-semibold tracking-wide text-left">
+                    User Review
+                  </th>
+                  <th className="w-32 p-3 text-sm font-semibold tracking-wide text-left">
+                    Ranking
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+              {searchedCollege.map((item,index)=>{
                 return ( <tr className="bg-white" key={index}>
               
                 <><td className="p-3 text-sm text-gray-700 whitespace-nowrap w-1/12">
@@ -157,74 +223,15 @@ const App = () => {
             </tr>)
               })}
             
-          </tbody>
-        </table>
-      </div>
-      </div>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </InfiniteScroll>
-
-      {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
-        <div className="bg-white space-y-3 p-4 rounded-lg shadow">
-          <div className="flex items-center space-x-2 text-sm">
-            <div>
-              <a href="#" className="text-blue-500 font-bold hover:underline">
-                #1000
-              </a>
-            </div>
-            <div className="text-gray-500">10/10/2021</div>
-            <div>
-              <span className="p-1.5 text-xs font-medium uppercase tracking-wider text-green-800 bg-green-200 rounded-lg bg-opacity-50">
-                Delivered
-              </span>
-            </div>
-          </div>
-          <div className="text-sm text-gray-700">
-            Kring New Fit office chair, mesh + PU, black
-          </div>
-          <div className="text-sm font-medium text-black">$200.00</div>
-        </div>
-        <div className="bg-white space-y-3 p-4 rounded-lg shadow">
-          <div className="flex items-center space-x-2 text-sm">
-            <div>
-              <a href="#" className="text-blue-500 font-bold hover:underline">
-                #1001
-              </a>
-            </div>
-            <div className="text-gray-500">10/10/2021</div>
-            <div>
-              <span className="p-1.5 text-xs font-medium uppercase tracking-wider text-yellow-800 bg-yellow-200 rounded-lg bg-opacity-50">
-                Shipped
-              </span>
-            </div>
-          </div>
-          <div className="text-sm text-gray-700">
-            Kring New Fit office chair, mesh + PU, black
-          </div>
-          <div className="text-sm font-medium text-black">$200.00</div>
-        </div>
-        <div className="bg-white space-y-3 p-4 rounded-lg shadow">
-          <div className="flex items-center space-x-2 text-sm">
-            <div>
-              <a href="#" className="text-blue-500 font-bold hover:underline">
-                #1002
-              </a>
-            </div>
-            <div className="text-gray-500">10/10/2021</div>
-            <div>
-              <span className="p-1.5 text-xs font-medium uppercase tracking-wider text-gray-800 bg-gray-200 rounded-lg bg-opacity-50">
-                Canceled
-              </span>
-            </div>
-          </div>
-          <div className="text-sm text-gray-700">
-            Kring New Fit office chair, mesh + PU, black
-          </div>
-          <div className="text-sm font-medium text-black">$200.00</div>
-        </div>
-      </div> */}
-  
     </>
   );
 };
 
+ 
 export default App;
+ 
